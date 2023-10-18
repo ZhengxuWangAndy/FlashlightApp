@@ -85,7 +85,7 @@ class MainActivity : AppCompatActivity(), GestureDetector.OnGestureListener {
                 flashLightSwitch.isChecked = true
             }
         } catch (e: Exception) {
-            showToast("An error occurred while turning on the flashlight: ${e.message}")
+            Toast.makeText(this, "An error occurred while turning on the flashlight: ${e.message}", Toast.LENGTH_SHORT).show()
         }
     }
 
@@ -97,7 +97,7 @@ class MainActivity : AppCompatActivity(), GestureDetector.OnGestureListener {
                 flashLightSwitch.isChecked = false
             }
         } catch (e: Exception) {
-            showToast("An error occurred while turning off the flashlight: ${e.message}")
+            Toast.makeText(this, "An error occurred while turning off the flashlight: ${e.message}", Toast.LENGTH_SHORT).show()
         }
     }
 
