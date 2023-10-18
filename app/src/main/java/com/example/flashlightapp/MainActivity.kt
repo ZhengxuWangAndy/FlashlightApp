@@ -1,11 +1,157 @@
 package com.example.flashlightapp
 
-import androidx.appcompat.app.AppCompatActivity
+import android.content.Context
+import android.content.pm.PackageManager
+import android.hardware.camera2.CameraCharacteristics
+import android.hardware.camera2.CameraManager
 import android.os.Bundle
+import android.view.GestureDetector
+import android.view.MotionEvent
+import android.widget.SearchView
+import android.widget.Switch
+import android.widget.Toast
+import androidx.appcompat.app.AppCompatActivity
 
-class MainActivity : AppCompatActivity() {
+class MainActivity : AppCompatActivity(), GestureDetector.OnGestureListener {
+    private lateinit var flashLightSwitch: Switch
+    private lateinit var searchFlashLightOption: SearchView
+    private lateinit var gestureDetector: GestureDetector
+    private lateinit var cameraManager: CameraManager
+    private lateinit var cameraIdWithFlash: String
+
+    companion object {
+        const val MIN_DISTANCE = 150
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
+
+        flashLightSwitch = findViewById(R.id.switch1)
+        searchFlashLightOption = findViewById(R.id.searchBox)
+        gestureDetector = GestureDetector(this, this)
+
+        cameraManager = getSystemService(Context.CAMERA_SERVICE) as CameraManager
+        cameraIdWithFlash = findCameraWithFlash(cameraManager)
+
+        if (cameraIdWithFlash.isNotEmpty()) {
+            flashLightSwitch.setOnCheckedChangeListener { _, isChecked ->
+                if (isChecked) {
+                    turnOnLight()
+                } else {
+                    turnOffLight()
+                }
+            }
+
+            searchFlashLightOption.setOnQueryTextListener(object : SearchView.OnQueryTextListener {
+                override fun onQueryTextSubmit(query: String?): Boolean {
+                    if (query != null) {
+                        val lowercaseQuery = query.toLowerCase()
+                        if (lowercaseQuery == "on") {
+                            turnOnLight()
+                        } else if (lowercaseQuery == "off") {
+                            turnOffLight()
+                        } else {
+                            showToast("Please type 'on' or 'off' to enable or disable the flashlight.")
+                        }
+                    } else {
+                        showToast("Type something.")
+                    }
+                    return true
+                }
+
+                override fun onQueryTextChange(newText: String?): Boolean {
+                    return true
+                }
+            })
+        } else {
+            showToast("Flashlight is not available on this device.")
+            flashLightSwitch.isEnabled = false
+            searchFlashLightOption.isEnabled = false
+        }
     }
+    private fun turnOnLight() {
+        try {
+            if (cameraIdWithFlash.isNotEmpty()) {
+                cameraManager.setTorchMode(cameraIdWithFlash, true)
+                showToast("Flashlight is on")
+            }
+        } catch (e: Exception) {
+            showToast("An error occurred while turning on the flashlight: ${e.message}")
+        }
+    }
+
+    private fun turnOffLight() {
+        try {
+            if (cameraIdWithFlash.isNotEmpty()) {
+                cameraManager.setTorchMode(cameraIdWithFlash, false)
+                showToast("Flashlight is off")
+            }
+        } catch (e: Exception) {
+            showToast("An error occurred while turning off the flashlight: ${e.message}")
+        }
+    }
+
+    override fun onTouchEvent(event: MotionEvent?): Boolean {
+        if (event != null) {
+            gestureDetector.onTouchEvent(event)
+        }
+        return super.onTouchEvent(event)
+    }
+
+    // Implement your turnOnLight, turnOffLight, and other gesture methods here
+
+    private fun findCameraWithFlash(cameraManager: CameraManager): String {
+        val cameraList = cameraManager.cameraIdList
+        for (cameraId in cameraList) {
+            val characteristics = cameraManager.getCameraCharacteristics(cameraId)
+            val flashInfo = characteristics.get(CameraCharacteristics.FLASH_INFO_AVAILABLE)
+            if (flashInfo == true) {
+                return cameraId
+            }
+        }
+        return ""
+    }
+
+    private fun showToast(message: String) {
+        Toast.makeText(this, message, Toast.LENGTH_LONG).show()
+    }
+
+    override fun onDown(p0: MotionEvent): Boolean {
+        TODO("Not yet implemented")
+    }
+
+    override fun onShowPress(p0: MotionEvent) {
+        TODO("Not yet implemented")
+    }
+
+    override fun onSingleTapUp(p0: MotionEvent): Boolean {
+        TODO("Not yet implemented")
+    }
+
+    override fun onScroll(
+        e1: MotionEvent?,
+        e2: MotionEvent,
+        distanceX: Float,
+        distanceY: Float
+    ): Boolean {
+        TODO("Not yet implemented")
+    }
+
+
+
+    override fun onLongPress(p0: MotionEvent) {
+        TODO("Not yet implemented")
+    }
+
+    override fun onFling(
+        e1: MotionEvent?,
+        e2: MotionEvent,
+        velocityX: Float,
+        velocityY: Float
+    ): Boolean {
+        TODO("Not yet implemented")
+    }
+
+
 }
