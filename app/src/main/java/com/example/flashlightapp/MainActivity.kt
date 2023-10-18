@@ -104,6 +104,7 @@ class MainActivity : AppCompatActivity(), GestureDetector.OnGestureListener {
     override fun onTouchEvent(event: MotionEvent?): Boolean {
         if (event != null) {
             gestureDetector.onTouchEvent(event)
+            return true // Consume the event to prevent app from exiting on blank area tap
         }
         return super.onTouchEvent(event)
     }
