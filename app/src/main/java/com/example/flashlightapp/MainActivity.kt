@@ -13,12 +13,19 @@ import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 
 class MainActivity : AppCompatActivity(), GestureDetector.OnGestureListener {
+
     private lateinit var flashLightSwitch: Switch
     private lateinit var searchFlashLightOption: SearchView
     private lateinit var gestureDetector: GestureDetector
     private lateinit var cameraManager: CameraManager
     private lateinit var cameraIdWithFlash: String
 
+
+    var x1:Float = 0.0f
+    var x2:Float = 0.0f
+    var y1:Float = 0.0f
+    var y2:Float = 0.0f
+    
     companion object {
         const val MIN_DISTANCE = 150
     }
@@ -31,7 +38,7 @@ class MainActivity : AppCompatActivity(), GestureDetector.OnGestureListener {
         searchFlashLightOption = findViewById(R.id.searchBox)
         gestureDetector = GestureDetector(this, this)
 
-        cameraManager = getSystemService(Context.CAMERA_SERVICE) as CameraManager
+        cameraManager = getSystemService(CAMERA_SERVICE) as CameraManager
         cameraIdWithFlash = findCameraWithFlash(cameraManager)
 
         if (cameraIdWithFlash.isNotEmpty()) {
@@ -75,6 +82,7 @@ class MainActivity : AppCompatActivity(), GestureDetector.OnGestureListener {
             if (cameraIdWithFlash.isNotEmpty()) {
                 cameraManager.setTorchMode(cameraIdWithFlash, true)
                 showToast("Flashlight is on")
+                flashLightSwitch.isChecked = true
             }
         } catch (e: Exception) {
             showToast("An error occurred while turning on the flashlight: ${e.message}")
@@ -86,6 +94,7 @@ class MainActivity : AppCompatActivity(), GestureDetector.OnGestureListener {
             if (cameraIdWithFlash.isNotEmpty()) {
                 cameraManager.setTorchMode(cameraIdWithFlash, false)
                 showToast("Flashlight is off")
+                flashLightSwitch.isChecked = false
             }
         } catch (e: Exception) {
             showToast("An error occurred while turning off the flashlight: ${e.message}")
@@ -99,7 +108,6 @@ class MainActivity : AppCompatActivity(), GestureDetector.OnGestureListener {
         return super.onTouchEvent(event)
     }
 
-    // Implement your turnOnLight, turnOffLight, and other gesture methods here
 
     private fun findCameraWithFlash(cameraManager: CameraManager): String {
         val cameraList = cameraManager.cameraIdList
@@ -126,7 +134,7 @@ class MainActivity : AppCompatActivity(), GestureDetector.OnGestureListener {
     }
 
     override fun onSingleTapUp(p0: MotionEvent): Boolean {
-        TODO("Not yet implemented")
+        return false
     }
 
     override fun onScroll(
@@ -138,20 +146,37 @@ class MainActivity : AppCompatActivity(), GestureDetector.OnGestureListener {
         TODO("Not yet implemented")
     }
 
-
+    override fun onPause() {
+        super.onPause()
+        cameraManager.setTorchMode(cameraIdWithFlash,false)
+    }
 
     override fun onLongPress(p0: MotionEvent) {
         TODO("Not yet implemented")
     }
 
-    override fun onFling(
-        e1: MotionEvent?,
-        e2: MotionEvent,
-        velocityX: Float,
-        velocityY: Float
-    ): Boolean {
-        TODO("Not yet implemented")
+    override fun onFling(e1: MotionEvent?, e2: MotionEvent, velocityX: Float, velocityY: Float): Boolean {
+        val deltaX = e2.x - (e1?.x ?: 0f)
+        val deltaY = e2.y - (e1?.y ?: 0f)
+        val minFlingVelocity = 1000
+
+        if (Math.abs(deltaY) > minFlingVelocity) {
+            if (deltaY > 0) {
+                // Fling up, turn off flashlight and switch off
+                turnOffLight()
+                flashLightSwitch.isChecked = false
+            } else {
+                // Fling down, turn on flashlight and switch on
+                turnOnLight()
+                flashLightSwitch.isChecked = true
+            }
+            return true
+        }
+
+        return false
     }
+
+
 
 
 }

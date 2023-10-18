@@ -40,5 +40,6 @@
         app:layout_constraintBottom_toTopOf="@id/switch1"
         app:layout_constraintVertical_chainStyle="packed"
         app:layout_constraintHorizontal_bias="0.5"
+        app:srcCompat="@drawable/flashlight_icon"
         />
 </androidx.constraintlayout.widget.ConstraintLayout>
