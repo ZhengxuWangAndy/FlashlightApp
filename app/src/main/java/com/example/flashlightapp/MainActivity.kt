@@ -1,7 +1,5 @@
 package com.example.flashlightapp
 
-import android.content.Context
-import android.content.pm.PackageManager
 import android.hardware.camera2.CameraCharacteristics
 import android.hardware.camera2.CameraManager
 import android.os.Bundle
@@ -12,23 +10,21 @@ import android.widget.Switch
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 
-class MainActivity : AppCompatActivity(), GestureDetector.OnGestureListener {
+class MainActivity() : AppCompatActivity() {
 
     private lateinit var flashLightSwitch: Switch
     private lateinit var searchFlashLightOption: SearchView
-    private lateinit var gestureDetector: GestureDetector
     private lateinit var cameraManager: CameraManager
     private lateinit var cameraIdWithFlash: String
-
+    lateinit var gestureDetector: GestureDetector
+    var MIN_DISTANCE=75
 
     var x1:Float = 0.0f
     var x2:Float = 0.0f
     var y1:Float = 0.0f
     var y2:Float = 0.0f
-    
-    companion object {
-        const val MIN_DISTANCE = 150
-    }
+
+    var isOn = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -36,7 +32,6 @@ class MainActivity : AppCompatActivity(), GestureDetector.OnGestureListener {
 
         flashLightSwitch = findViewById(R.id.switch1)
         searchFlashLightOption = findViewById(R.id.searchBox)
-        gestureDetector = GestureDetector(this, this)
 
         cameraManager = getSystemService(CAMERA_SERVICE) as CameraManager
         cameraIdWithFlash = findCameraWithFlash(cameraManager)
@@ -76,8 +71,45 @@ class MainActivity : AppCompatActivity(), GestureDetector.OnGestureListener {
             flashLightSwitch.isEnabled = false
             searchFlashLightOption.isEnabled = false
         }
+
+        gestureDetector = GestureDetector(this, object : GestureDetector.SimpleOnGestureListener() {
+            override fun onFling(
+                e1: MotionEvent?,
+                e2: MotionEvent,
+                velocityX: Float,
+                velocityY: Float
+            ): Boolean {
+                // Your fling logic here. For instance, you could check fling direction and turn the flashlight on/off.
+                if (e1 != null && e2 != null) {
+                    val deltaY = e2.y - e1.y
+
+                    if (Math.abs(deltaY) > MIN_DISTANCE) {
+                        if (isOn){
+                            turnOffLight()
+                            isOn = false
+                        }else{
+                            turnOnLight()
+                            isOn = true
+                        }
+                        return true
+                    }
+                }
+                return false
+            }
+        })
     }
-    private fun turnOnLight() {
+
+    override fun onTouchEvent(event: MotionEvent?): Boolean {
+        // This allows the gestureDetector to handle the caught motion events
+        if (event != null) {
+            gestureDetector.onTouchEvent(event)
+        }
+        // Be sure to call the superclass implementation
+        return super.onTouchEvent(event)
+    }
+
+
+    fun turnOnLight() {
         try {
             if (cameraIdWithFlash.isNotEmpty()) {
                 cameraManager.setTorchMode(cameraIdWithFlash, true)
@@ -89,7 +121,7 @@ class MainActivity : AppCompatActivity(), GestureDetector.OnGestureListener {
         }
     }
 
-    private fun turnOffLight() {
+    fun turnOffLight() {
         try {
             if (cameraIdWithFlash.isNotEmpty()) {
                 cameraManager.setTorchMode(cameraIdWithFlash, false)
@@ -99,14 +131,6 @@ class MainActivity : AppCompatActivity(), GestureDetector.OnGestureListener {
         } catch (e: Exception) {
             Toast.makeText(this, "An error occurred while turning off the flashlight: ${e.message}", Toast.LENGTH_SHORT).show()
         }
-    }
-
-    override fun onTouchEvent(event: MotionEvent?): Boolean {
-        if (event != null) {
-            gestureDetector.onTouchEvent(event)
-            return true // Consume the event to prevent app from exiting on blank area tap
-        }
-        return super.onTouchEvent(event)
     }
 
 
@@ -126,58 +150,10 @@ class MainActivity : AppCompatActivity(), GestureDetector.OnGestureListener {
         Toast.makeText(this, message, Toast.LENGTH_LONG).show()
     }
 
-    override fun onDown(p0: MotionEvent): Boolean {
-        TODO("Not yet implemented")
-    }
-
-    override fun onShowPress(p0: MotionEvent) {
-        TODO("Not yet implemented")
-    }
-
-    override fun onSingleTapUp(p0: MotionEvent): Boolean {
-        return false
-    }
-
-    override fun onScroll(
-        e1: MotionEvent?,
-        e2: MotionEvent,
-        distanceX: Float,
-        distanceY: Float
-    ): Boolean {
-        TODO("Not yet implemented")
-    }
-
     override fun onPause() {
         super.onPause()
         cameraManager.setTorchMode(cameraIdWithFlash,false)
     }
-
-    override fun onLongPress(p0: MotionEvent) {
-        TODO("Not yet implemented")
-    }
-
-    override fun onFling(e1: MotionEvent?, e2: MotionEvent, velocityX: Float, velocityY: Float): Boolean {
-        val deltaX = e2.x - (e1?.x ?: 0f)
-        val deltaY = e2.y - (e1?.y ?: 0f)
-        val minFlingVelocity = 1000
-
-        if (Math.abs(deltaY) > minFlingVelocity) {
-            if (deltaY > 0) {
-                // Fling up, turn off flashlight and switch off
-                turnOffLight()
-                flashLightSwitch.isChecked = false
-            } else {
-                // Fling down, turn on flashlight and switch on
-                turnOnLight()
-                flashLightSwitch.isChecked = true
-            }
-            return true
-        }
-
-        return false
-    }
-
-
 
 
 }
